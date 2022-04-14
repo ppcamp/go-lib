@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRandString(t *testing.T) {
+func TestString(t *testing.T) {
 	assert := require.New(t)
 
 	assert.NotPanics(func() {
-		_ = random.RandString(30)
+		_ = random.String(30)
 	})
 
-	assert.Len(random.RandString(30), 30)
+	assert.Len(random.String(30), 30)
 }
