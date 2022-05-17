@@ -34,7 +34,7 @@ func main() {
 type job struct{}
 
 func (s *job) Process(ctx context.Context) {
-	id, ok := ctx.Value(workerpool.InfoKey("id")).(workerpool.InfoValue)
+	id, ok := ctx.Value(workerpool.KeyId).(workerpool.InfoValue)
 	if !ok {
 		panic("fail")
 	}

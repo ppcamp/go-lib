@@ -10,6 +10,8 @@ import (
 type InfoKey string
 type InfoValue int32
 
+const KeyId InfoKey = InfoKey("id")
+
 type worker struct {
 	close   chan bool
 	logging bool
@@ -97,7 +99,7 @@ func (s *worker) do(tid int32) {
 				log.Printf("[#%d] Processing some job\n", tid)
 			}
 
-			ctx := context.WithValue(s.ctx, InfoKey("id"), InfoValue(tid))
+			ctx := context.WithValue(s.ctx, KeyId, InfoValue(tid))
 			s.job.Process(ctx)
 		}
 	}
