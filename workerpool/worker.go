@@ -15,12 +15,12 @@ const KeyId InfoKey = InfoKey("id")
 type worker struct {
 	close   chan bool
 	logging bool
-	job     Job
+	jobs    chan Job
 	workers int32
 	ctx     context.Context
 }
 
-func NewWorker(job Job, opts ...Option) Worker {
+func NewWorker(opts ...Option) Worker {
 	option := &opt{
 		Jobs:    int32(runtime.NumCPU()),
 		Logging: false,
@@ -34,7 +34,7 @@ func NewWorker(job Job, opts ...Option) Worker {
 	return &worker{
 		close:   make(chan bool),
 		logging: option.Logging,
-		job:     job,
+		jobs:    make(chan Job, option.Jobs),
 		workers: option.Jobs,
 		ctx:     option.Context,
 	}
@@ -56,7 +56,7 @@ func (s *worker) Shutdown() {
 	close(s.close)
 }
 
-func (s *worker) Process() {
+func (s *worker) Start() {
 	if s.logging {
 		log.Printf("Starting %d jobs", s.workers)
 	}
@@ -69,6 +69,16 @@ func (s *worker) Process() {
 		log.Printf("%d jobs started", s.workers)
 	}
 
+}
+
+func (s *worker) Process(j Job) {
+	if s.logging {
+		log.Printf("Adding a new job #%s jobs\n", j.Id())
+	}
+	s.jobs <- j
+	if s.logging {
+		log.Printf("Job #%s added\n", j.Id())
+	}
 }
 
 func (s *worker) do(tid int32) {
@@ -94,13 +104,12 @@ func (s *worker) do(tid int32) {
 			}
 			return
 
-		default:
+		case j := <-s.jobs:
 			if s.logging {
-				log.Printf("[#%d] Processing some job\n", tid)
+				log.Printf("[#%d] Processing job #%s\n", tid, j.Id())
 			}
-
 			ctx := context.WithValue(s.ctx, KeyId, InfoValue(tid))
-			s.job.Process(ctx)
+			j.Process(ctx)
 		}
 	}
 }
