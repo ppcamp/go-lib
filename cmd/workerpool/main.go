@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	executor := new(job)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -20,12 +19,10 @@ func main() {
 	// defer cancel()
 
 	pool := workerpool.NewWorker(
-		executor,
 		workerpool.WithContext(ctx),
 		workerpool.WithLogging(),
 		workerpool.WithSetJobs(2),
 	)
-	pool.Process()
 
 	<-ctx.Done()
 	pool.Shutdown()

@@ -6,6 +6,8 @@ import (
 	"container/heap"
 	"sync"
 	"time"
+
+	"github.com/ppcamp/go-lib/priorityqueue/intqueue"
 )
 
 type Job interface {
@@ -24,7 +26,7 @@ type worker struct {
 	close      chan bool
 	finishTask chan bool
 	ticker     time.Ticker
-	queue      IntHeap
+	queue      intqueue.IntHeap
 	N          int
 	wg         *sync.WaitGroup
 }
@@ -37,7 +39,7 @@ func NewWorker(workers, jobs int, delay time.Duration) Worker {
 		jobs:       make(chan Job, jobs),
 		close:      make(chan bool, 1),
 		finishTask: make(chan bool, 1),
-		queue:      IntHeap{},
+		queue:      intqueue.IntHeap{},
 		N:          workers,
 		ticker:     *time.NewTicker(delay),
 		wg:         wg,
