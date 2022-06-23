@@ -1,3 +1,4 @@
+// This example demonstrates an integer heap built using the heap interface.
 package intqueue
 
 // An IntHeap is a min-heap of ints.
