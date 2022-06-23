@@ -2,23 +2,23 @@ package env
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	basestrings "strings"
 	"syscall"
+
+	"github.com/ppcamp/go-lib/strings"
 )
 
 func fromEnv(envVar string) (string, bool) {
-	envVar = strings.TrimSpace(envVar)
+	envVar = basestrings.TrimSpace(envVar)
 	return syscall.Getenv(envVar)
 }
 
 type Flag interface{ Apply() }
 
-func Parse(flags []Flag) error {
+func Parse(flags []Flag) {
 	for _, v := range flags {
 		v.Apply()
 	}
-	return nil
 }
 
 type types interface {
@@ -26,55 +26,38 @@ type types interface {
 }
 
 type BaseFlag[T types] struct {
-	Pos       *T
-	Default   T
-	EnvName   string
-	Mandatory bool
-}
-
-func toInt[T int | int32 | int64](v string) T {
-	a, err := strconv.Atoi(v)
-	if err != nil {
-		panic(err)
-	}
-	return T(a)
-}
-
-func toFloat[T float32 | float64](v string) T {
-	a, err := strconv.ParseFloat(v, 64)
-	if err != nil {
-		panic(err)
-	}
-	return T(a)
+	Pos     *T
+	Default T
+	EnvName string
 }
 
 func (s *BaseFlag[T]) Apply() {
 	v, exist := fromEnv(s.EnvName)
+	var response T
 
 	if !exist {
-		if s.Mandatory {
+		// check if there's no default value
+		if s.Default == response {
 			panic(fmt.Sprintf("flag %s is not defined", s.EnvName))
 		}
-
 		s.Pos = &s.Default
 		return
 	}
 
-	var ret T
-	switch p := any(&ret).(type) {
+	switch p := any(&response).(type) {
 	case *int:
-		*p = toInt[int](v)
+		*p = strings.ToInt[int](v)
 	case *int32:
-		*p = toInt[int32](v)
+		*p = strings.ToInt[int32](v)
 	case *int64:
-		*p = toInt[int64](v)
+		*p = strings.ToInt[int64](v)
 	case *string:
 		*p = v
 	case *float32:
-		*p = toFloat[float32](v)
+		*p = strings.ToFloat[float32](v)
 	case *float64:
-		*p = toFloat[float64](v)
+		*p = strings.ToFloat[float64](v)
 	}
 
-	s.Pos = &ret
+	s.Pos = &response
 }
