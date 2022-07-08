@@ -52,7 +52,10 @@ func TestParse(t *testing.T) {
 
 	// check the error scenario
 
-	flags = []env.Flag{&env.BaseFlag[string]{Value: &resultDef, EnvName: "NOT_IN_ENV"}}
+	flags = []env.Flag{
+		&env.BaseFlag[string]{Value: &resultDef, EnvName: "NOT_IN_ENV", Required: true},
+	}
+
 	err = env.Parse(flags)
 	assert.NotNil(err)
 	assert.ErrorIs(err, env.ErrFlagRequired)

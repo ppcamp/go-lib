@@ -49,6 +49,10 @@ type BaseFlag[T BaseFlagTypes] struct {
 
 	// EnvName is the name of the environment variable that will try to fetch this data
 	EnvName string
+
+	// Required is used to check if the value was found in the path.
+	// This is necessary, since that an empty variable can be in the env
+	Required bool
 }
 
 // isEmpty check if the value has the same value as an unitialized variable
@@ -60,7 +64,7 @@ func (s *BaseFlag[T]) isEmpty(value T) bool {
 func (s *BaseFlag[T]) Apply() error {
 	valueFromEnv, exist := fromEnv(s.EnvName)
 	// check if the flag don't exist and if there's no default value
-	if !exist && s.isEmpty(s.Default) {
+	if !exist && s.isEmpty(s.Default) && s.Required {
 		return fmt.Errorf("flag %s is not defined: %w", s.EnvName, ErrFlagRequired)
 	}
 
