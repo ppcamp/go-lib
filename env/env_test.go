@@ -15,14 +15,14 @@ func TestParse(t *testing.T) {
 	expectedInt := 3
 	expectedStr := "some_a"
 	expectedFloat := 1.31
+	expectedDef := "some_value"
 
+	// update this environ
 	envVars := map[string]string{
 		"SOME_INT":    fmt.Sprintf("%d", expectedInt),
 		"SOME_FLOAT":  fmt.Sprintf("%f", expectedFloat),
 		"SOME_STRING": expectedStr,
 	}
-
-	// update this environ
 	for key, value := range envVars {
 		if err := os.Setenv(key, value); err != nil {
 			t.Fail()
@@ -31,22 +31,29 @@ func TestParse(t *testing.T) {
 
 	var resultInt int
 	var resultFloat float64
-	var resultStr string
+	var resultStr, resultDef string
 
 	// try to get those parses
 	flags := []env.Flag{
 		&env.BaseFlag[int]{Value: &resultInt, EnvName: "SOME_INT"},
 		&env.BaseFlag[float64]{Value: &resultFloat, EnvName: "SOME_FLOAT"},
 		&env.BaseFlag[string]{Value: &resultStr, EnvName: "SOME_STRING"},
+		&env.BaseFlag[string]{Value: &resultDef, EnvName: "NOT_IN_ENV", Default: expectedDef},
 	}
 
 	// check if occurred some error during parse
-	assert.NotPanics(func() {
-		env.Parse(flags)
-	})
+	err := env.Parse(flags)
+	assert.Nil(err)
 
 	// check if parsed successfully
-	results := []any{resultInt, resultFloat, resultStr}
-	expected := []any{expectedInt, expectedFloat, expectedStr}
-	assert.ElementsMatch(results, expected)
+	expected := []any{expectedInt, expectedFloat, expectedStr, expectedDef}
+	results := []any{resultInt, resultFloat, resultStr, resultDef}
+	assert.ElementsMatch(expected, results)
+
+	// check the error scenario
+
+	flags = []env.Flag{&env.BaseFlag[string]{Value: &resultDef, EnvName: "NOT_IN_ENV"}}
+	err = env.Parse(flags)
+	assert.NotNil(err)
+	assert.ErrorIs(err, env.ErrFlagRequired)
 }

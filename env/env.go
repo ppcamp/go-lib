@@ -1,11 +1,17 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	basestrings "strings"
 	"syscall"
 
 	"github.com/ppcamp/go-lib/strings"
+)
+
+var (
+	ErrFlagRequired   error = errors.New("the flag is required")
+	ErrUnexpectedType error = errors.New("unexpected type")
 )
 
 func fromEnv(envVar string) (string, bool) {
@@ -45,35 +51,44 @@ type BaseFlag[T BaseFlagTypes] struct {
 	EnvName string
 }
 
-func (s *BaseFlag[T]) Apply() error {
-	var response T
+// isEmpty check if the value has the same value as an unitialized variable
+func (s *BaseFlag[T]) isEmpty(value T) bool {
+	var r T
+	return r == value
+}
 
-	v, exist := fromEnv(s.EnvName)
-	if !exist {
-		// check if there's no default value
-		if s.Default == response {
-			return fmt.Errorf("flag %s is not defined", s.EnvName)
-		}
-		s.Value = &s.Default
+func (s *BaseFlag[T]) Apply() error {
+	valueFromEnv, exist := fromEnv(s.EnvName)
+	// check if the flag don't exist and if there's no default value
+	if !exist && s.isEmpty(s.Default) {
+		return fmt.Errorf("flag %s is not defined: %w", s.EnvName, ErrFlagRequired)
 	}
 
 	// creates a pointer of the type T pointing to the response object and switch basing on the ptrs
+	var response T
 	switch p := any(&response).(type) {
 	case *int:
-		*p = strings.ToInt[int](v)
+		*p = strings.ToInt[int](valueFromEnv)
 	case *int32:
-		*p = strings.ToInt[int32](v)
+		*p = strings.ToInt[int32](valueFromEnv)
 	case *int64:
-		*p = strings.ToInt[int64](v)
+		*p = strings.ToInt[int64](valueFromEnv)
 	case *string:
-		*p = v
+		*p = valueFromEnv
 	case *float32:
-		*p = strings.ToFloat[float32](v)
+		*p = strings.ToFloat[float32](valueFromEnv)
 	case *float64:
-		*p = strings.ToFloat[float64](v)
+		*p = strings.ToFloat[float64](valueFromEnv)
+	default:
+		return fmt.Errorf("type %T: %w", p, ErrUnexpectedType)
 	}
 
 	// update the value of the passed variable
-	*s.Value = response
+	if s.isEmpty(response) {
+		*s.Value = s.Default
+	} else {
+		*s.Value = response
+	}
+
 	return nil
 }

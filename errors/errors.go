@@ -5,7 +5,7 @@ import (
 )
 
 func Wraps(message string, err error) error {
-	return fmt.Errorf("%s.\nOriginal error: %v", message, err)
+	return fmt.Errorf("%s. chain err: %w", message, err)
 }
 
 func Must[T any](param T, err error) T {
