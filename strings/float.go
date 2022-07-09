@@ -2,10 +2,11 @@ package strings
 
 import "strconv"
 
-func ToFloat[T float32 | float64](v string) T {
+func ToFloat[T float32 | float64](v string) (T, error) {
 	a, err := strconv.ParseFloat(v, 64)
 	if err != nil {
-		panic(err)
+		var r T
+		return r, err
 	}
-	return T(a)
+	return T(a), nil
 }

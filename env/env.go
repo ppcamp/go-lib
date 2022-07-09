@@ -27,7 +27,7 @@ type Flag interface {
 func Parse(flags []Flag) error {
 	for _, v := range flags {
 		if err := v.Apply(); err != nil {
-			return err
+			return fmt.Errorf("fail to parse %w", err)
 		}
 	}
 	return nil
@@ -72,17 +72,43 @@ func (s *BaseFlag[T]) Apply() error {
 	var response T
 	switch p := any(&response).(type) {
 	case *int:
-		*p = strings.ToInt[int](valueFromEnv)
+		tmp, err := strings.ToInt[int](valueFromEnv)
+		if err != nil {
+			return fmt.Errorf("fail to parse flag %s error %w", s.EnvName, err)
+		}
+		*p = tmp
+
 	case *int32:
-		*p = strings.ToInt[int32](valueFromEnv)
+		tmp, err := strings.ToInt[int32](valueFromEnv)
+		if err != nil {
+			return fmt.Errorf("fail to parse flag %s error %w", s.EnvName, err)
+		}
+		*p = tmp
+
 	case *int64:
-		*p = strings.ToInt[int64](valueFromEnv)
+		tmp, err := strings.ToInt[int64](valueFromEnv)
+		if err != nil {
+			return fmt.Errorf("fail to parse flag %s error %w", s.EnvName, err)
+		}
+		*p = tmp
+
+	case *float32:
+		tmp, err := strings.ToFloat[float32](valueFromEnv)
+		if err != nil {
+			return fmt.Errorf("fail to parse flag %s error %w", s.EnvName, err)
+		}
+		*p = tmp
+
+	case *float64:
+		tmp, err := strings.ToFloat[float64](valueFromEnv)
+		if err != nil {
+			return fmt.Errorf("fail to parse flag %s error %w", s.EnvName, err)
+		}
+		*p = tmp
+
 	case *string:
 		*p = valueFromEnv
-	case *float32:
-		*p = strings.ToFloat[float32](valueFromEnv)
-	case *float64:
-		*p = strings.ToFloat[float64](valueFromEnv)
+
 	default:
 		return fmt.Errorf("type %T: %w", p, ErrUnexpectedType)
 	}
