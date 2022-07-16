@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	xtenderr "github.com/ppcamp/go-lib/errors"
+	xtenderr "github.com/ppcamp/go-xtendlib/errors"
 	"github.com/stretchr/testify/assert"
 )
 
